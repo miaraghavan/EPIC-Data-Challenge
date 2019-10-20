@@ -59,7 +59,7 @@ stopwords("english")
 ecleaned<-tm_map(ecorpus,removeWords,stopwords("english"))
 inspect(ecleaned[1:5])
 #remove united and airlines
-ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according","…","—","’s"))
+ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
@@ -82,7 +82,7 @@ w["new"]
 
 
 #WORDCLOUD
-?set.seed
+set.seed(222)
 wordcloud(words=names(sw),
           freq=sw,
           max.words = 200,
