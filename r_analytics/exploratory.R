@@ -59,7 +59,7 @@ stopwords("english")
 ecleaned<-tm_map(ecorpus,removeWords,stopwords("english"))
 inspect(ecleaned[1:5])
 #remove united and airlines
-ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according"))
+ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according","…","—","’s"))
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
@@ -67,10 +67,25 @@ ecleaned<-tm_map(ecleaned,stripWhitespace)
 #to structure the data
 etdm<-TermDocumentMatrix(ecleaned)
 etdm
+
 ematrix<-as.matrix(etdm)
 ematrix[1:10,1:20]
-
+ematrix<-NULL
 #BARPLOT
 w <- rowSums(ematrix)
-w <- w[w>5000]
-barplot(w)
+w[1:10]
+sw<-sort(w,TRUE)
+ov2k <- w[w>1000]
+barplot(sw[1:1000],las=2,main="Over 2000")
+sw[1:100]
+w["new"]
+
+
+#WORDCLOUD
+?set.seed
+wordcloud(words=names(sw),
+          freq=sw,
+          max.words = 200,
+          min.freq = 200,
+          colors = brewer.pal(8,"Dark2"))
+
