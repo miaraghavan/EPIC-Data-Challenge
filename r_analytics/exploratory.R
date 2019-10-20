@@ -9,6 +9,7 @@ install.packages("textir")
 install.packages("RWeka")
 install.packages("qdap")
 install.packages("maptpx")
+install.packages("syuzhet")
 
 ######### LOADING LIBRARY ######### 
 #library("rjson") -- not working
@@ -20,10 +21,12 @@ library("textir")
 library("RWeka")
 library("qdap")
 library("maptpx")
+library("syuzhet")
 
 ######### BEGIN EXPLORE ######### 
 articles <- fromJSON("../datasets/articles.json")
 str(articles)
+
 
 barplot(table(articles$sentiment,articles$source$country),las=2)
 hist(articles$sentiment[articles$country=="United States"])
@@ -71,7 +74,7 @@ etdm
 ematrix<-as.matrix(etdm)
 ematrix[1:10,1:20]
 ematrix<-NULL
-#BARPLOT
+#### BARPLOT #### 
 w <- rowSums(ematrix)
 w[1:10]
 sw<-sort(w,TRUE)
@@ -81,11 +84,21 @@ sw[1:100]
 w["new"]
 
 
-#WORDCLOUD
+#### WORDCLOUD #### 
 set.seed(222)
 wordcloud(words=names(sw),
           freq=sw,
           max.words = 200,
           min.freq = 200,
           colors = brewer.pal(8,"Dark2"))
+
+#### SENTIMENT ANALYSIS #### 
+attributes(ecleaned)
+df <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
+head(df$text)
+str(df)
+sentiment <- get_nrc_sentiment(df$text)
+df$s<-sentiment
+head(df$s)
+
 
