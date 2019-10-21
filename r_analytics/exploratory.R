@@ -9,6 +9,7 @@ install.packages("textir")
 install.packages("RWeka")
 install.packages("qdap")
 install.packages("maptpx")
+install.packages("syuzhet")
 
 ######### LOADING LIBRARY ######### 
 #library("rjson") -- not working
@@ -20,10 +21,12 @@ library("textir")
 library("RWeka")
 library("qdap")
 library("maptpx")
+library("syuzhet")
 
 ######### BEGIN EXPLORE ######### 
 articles <- fromJSON("../datasets/articles.json")
 str(articles)
+
 
 barplot(table(articles$sentiment,articles$source$country),las=2)
 hist(articles$sentiment[articles$country=="United States"])
@@ -59,7 +62,7 @@ stopwords("english")
 ecleaned<-tm_map(ecorpus,removeWords,stopwords("english"))
 inspect(ecleaned[1:5])
 #remove united and airlines
-ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according"))
+ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
@@ -67,10 +70,35 @@ ecleaned<-tm_map(ecleaned,stripWhitespace)
 #to structure the data
 etdm<-TermDocumentMatrix(ecleaned)
 etdm
+
 ematrix<-as.matrix(etdm)
 ematrix[1:10,1:20]
-
-#BARPLOT
+ematrix<-NULL
+#### BARPLOT #### 
 w <- rowSums(ematrix)
-w <- w[w>5000]
-barplot(w)
+w[1:10]
+sw<-sort(w,TRUE)
+ov2k <- w[w>1000]
+barplot(sw[1:1000],las=2,main="Over 2000")
+sw[1:100]
+w["new"]
+
+
+#### WORDCLOUD #### 
+set.seed(222)
+wordcloud(words=names(sw),
+          freq=sw,
+          max.words = 200,
+          min.freq = 200,
+          colors = brewer.pal(8,"Dark2"))
+
+#### SENTIMENT ANALYSIS #### 
+attributes(ecleaned)
+df <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
+head(df$text)
+str(df)
+sentiment <- get_nrc_sentiment(df$text)
+df$s<-sentiment
+head(df$s)
+
+
