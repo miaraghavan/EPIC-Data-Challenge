@@ -102,3 +102,32 @@ df$s<-sentiment
 head(df$s)
 
 
+#### EXPORTING CSV ####
+#OK HAVE TO DROP AUTHORS BECAUSE IT IS A LIST OF CHR AND NOT A VECTOR SO CANNOT USE WRITE WITH IT--
+selected <- articles[,!names(articles) %in% c("authors","has_video","topics","image_link","link","source.link")]
+selected <- flatten(selected)
+
+first <- sample(1:39109,9777)
+k1<-selected[first,]
+selected<-selected[-first,]
+
+second <- sample(1:29332,9777)
+k2<-selected[second,]
+selected<-selected[-second,]
+
+third <- sample(1:19555,9777)
+k3<-selected[third,]
+
+k4<-selected[-third,]
+
+write.csv(k1,"../four-fold-export/k1.csv",row.names = F)
+write.csv(k2,"../four-fold-export/k2.csv",row.names = F)
+write.csv(k3,"../four-fold-export/k3.csv",row.names = F)
+write.csv(k4,"../four-fold-export/k4.csv",row.names = F)
+
+?write.csv
+head(k1)
+
+test1<-read.csv("../four-fold-export/k1.csv")
+#head(test1)
+
