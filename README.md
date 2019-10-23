@@ -1,5 +1,5 @@
 # EPIC Data Challenge
-##Authors:
+##Authors:##
 Hana Nabilah Fatinah, Mirav Raghavan, Pan Jia Qi, and Sewen Thy
 
-##Description:
+##Description:##
