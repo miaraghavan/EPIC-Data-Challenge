@@ -3,25 +3,29 @@ install.packages("jsonlite")
 
 #########INSTALLING LIBRARIES FOR NLP ######### 
 install.packages("tm")
-install.packages("rJava") #FIX macOS SUPPORTING ISSUE BY RUNNING "sudo R CMD javareconf" in TERMINAL
+#install.packages("rJava") #FIX macOS SUPPORTING ISSUE BY RUNNING "sudo R CMD javareconf" in TERMINAL
 install.packages("wordcloud")
-install.packages("textir")
-install.packages("RWeka")
-install.packages("qdap")
-install.packages("maptpx")
+#install.packages("textir")
+#install.packages("RWeka")
+#install.packages("qdap")
+#install.packages("maptpx")
 install.packages("syuzhet")
+install.packages("topicmodels")
+install.packages("tidytext")
 
 ######### LOADING LIBRARY ######### 
 #library("rjson") -- not working
 library("jsonlite")
 library("tm")
-library("rJava")
+#library("rJava")
 library("wordcloud")
-library("textir")
-library("RWeka")
-library("qdap")
-library("maptpx")
+#library("textir")
+#library("RWeka")
+#library("qdap")
+#library("maptpx")
 library("syuzhet")
+library("topicmodels")
+library("tidytext")
 
 ######### BEGIN EXPLORE ######### 
 articles <- fromJSON("../datasets/articles.json")
@@ -52,6 +56,8 @@ ccleaned<-tm_map(ccorpus,removeWords,stopwords("en"))
 stopwords("en")
 
 removeURL<- function(x) gsub('http[[:alnum:]]*','',x)
+changeWords<- function(x) gsub('australi','',x)
+
 ccleaned<-tm_map(cleaned,content_transformer(removeURL))
 ccleaned<-tm_map(cleaned,stripWhitespace)
 
@@ -60,9 +66,10 @@ ecorpus<-tm_map(ecorpus,removePunctuation)
 ecorpus<-tm_map(ecorpus,removeNumbers)
 stopwords("english")
 ecleaned<-tm_map(ecorpus,removeWords,stopwords("english"))
+ecleaned<-tm_map(ecorpus,content_transformer(changeWords))
 inspect(ecleaned[1:5])
 #remove united and airlines
-ecleaned<-tm_map(ecleaned,removeWords,c("united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
+ecleaned<-tm_map(ecleaned,removeWords,c('plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
@@ -99,6 +106,7 @@ head(df$text)
 str(df)
 sentiment <- get_nrc_sentiment(df$text)
 df$s<-sentiment
+head(sentiment)
 head(df$s)
 
 
@@ -128,6 +136,32 @@ write.csv(k4,"../four-fold-export/k4.csv",row.names = F)
 ?write.csv
 head(k1)
 
+#### TOP10PUBLISHERS ####
 test1<-read.csv("../four-fold-export/k1.csv")
 #head(test1)
+tpub <- table(articles$source$publisher)
+tpub<- sort(tpub,T)
+barplot(tpub[1:10],las=1,
+               main="Top 10 Publishing Sources",
+                 ylab="Amount of Articles",
+                 xlab="Sources",
+                 names.arg = c("yahoo","cbsnews","boardingarea","nbc","foxnews","flyertalk","aviationpros","4-traders.com","sfgate","thevillagesuntimes"),
+                 col="red")
+
+#### TOPIC CLUSTERING ####
+
+# set a seed so that the output of the model is predictable
+k =4
+etdm_lda <- LDA(etdm, k = k, control = list(seed = 1234))
+etdm_lda
+
+ldamat<-as.matrix(topics(etdm_lda))
+which(ldamat[,1]==2)[1:20]
+ldamat[30]
+
+etdm_topics <- tidy(ldamat,matrix="beta")
+etdm_topics[100:150,]
+
+
+
 
