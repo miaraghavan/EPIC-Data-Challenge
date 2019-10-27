@@ -69,7 +69,7 @@ ecleaned<-tm_map(ecorpus,removeWords,stopwords("english"))
 ecleaned<-tm_map(ecorpus,content_transformer(changeWords))
 inspect(ecleaned[1:5])
 #remove united and airlines
-ecleaned<-tm_map(ecleaned,removeWords,c('plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
+ecleaned<-tm_map(ecleaned,removeWords,c(stopwords("english"),'plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
@@ -86,17 +86,17 @@ w <- rowSums(ematrix)
 w[1:10]
 sw<-sort(w,TRUE)
 ov2k <- w[w>1000]
-barplot(sw[1:1000],las=2,main="Over 2000")
+barplot(sw[1:100],las=2,main="Over 2000")
 sw[1:100]
 w["new"]
 
 
 #### WORDCLOUD #### 
-set.seed(222)
+set.seed(500)
 wordcloud(words=names(sw),
           freq=sw,
-          max.words = 200,
-          min.freq = 200,
+          max.words = 100,
+          min.freq = 1000,
           colors = brewer.pal(8,"Dark2"))
 
 #### SENTIMENT ANALYSIS #### 
@@ -109,6 +109,9 @@ df$s<-sentiment
 head(sentiment)
 head(df$s)
 
+typeof(sentiment)
+barplot(table(sentiment))
+table(sentiment)
 
 #### EXPORTING CSV ####
 #OK HAVE TO DROP AUTHORS BECAUSE IT IS A LIST OF CHR AND NOT A VECTOR SO CANNOT USE WRITE WITH IT--
