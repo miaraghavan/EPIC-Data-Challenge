@@ -108,8 +108,18 @@ barplot(sw[1:100],las=2,main="Over 2000")
 sw[1:100]
 w["new"]
 
-barplot(table(articles$sentiment[is.element(articles$source$publisher,names(tpub[1:10]))],articles$source$publisher[is.element(articles$source$publisher,names(tpub[1:10]))]))
 
+##### SENTIMENT AGAINST PUBLISHER ####
+#FREQUENCY
+barplot(table(articles$sentiment[is.element(articles$source$publisher,names(tpub[1:10]))],articles$source$publisher[is.element(articles$source$publisher,names(tpub[1:10]))]),
+        legend=T,
+        ylim=c(0,1300))
+contingencytb<-table(articles$sentiment[is.element(articles$source$publisher,names(tpub[1:10]))],articles$source$publisher[is.element(articles$source$publisher,names(tpub[1:10]))])
+for(i in 1:10){
+  contingencytb[,i]<-contingencytb[,i]/sum(contingencytb[,i])
+}
+barplot(contingencytb) # PROPORTION OF THE SENTIMENTS
+contingencytb
 #### WORDCLOUD #### 
 set.seed(222)
 wordcloud(words=names(sw),
