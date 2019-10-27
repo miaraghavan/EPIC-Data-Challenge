@@ -29,6 +29,7 @@ library("tidytext")
 
 ######### BEGIN EXPLORE ######### 
 articles <- fromJSON("../datasets/articles.json")
+head(articles)
 str(articles)
 
 
@@ -49,17 +50,8 @@ ecorpus<-Corpus(VectorSource(excerptCorpus))
 inspect(ccorpus[1:5])
 
 #### CLEANING ####
-ccorpus<-tm_map(ccorpus,tolower) 
-ccorpus<-tm_map(ccorpus,removePunctuation)
-ccorpus<-tm_map(ccorpus,removeNumbers)
-ccleaned<-tm_map(ccorpus,removeWords,stopwords("en"))
-stopwords("en")
-
 removeURL<- function(x) gsub('http[[:alnum:]]*','',x)
 changeWords<- function(x) gsub('australi','',x)
-
-ccleaned<-tm_map(cleaned,content_transformer(removeURL))
-ccleaned<-tm_map(cleaned,stripWhitespace)
 
 ecorpus<-tm_map(ecorpus,tolower) #make it all lowercase
 ecorpus<-tm_map(ecorpus,removePunctuation)
@@ -73,6 +65,32 @@ ecleaned<-tm_map(ecleaned,removeWords,c(stopwords("english"),'plane',"united","a
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
+
+#### k1 ####
+k1 <- read.csv("../four-fold-export/k1.csv")
+contentCorpus<- iconv(k1$contents,to="utf-8-mac")
+ccorpus<-Corpus(VectorSource(contentCorpus))
+
+ccorpus<-tm_map(ccorpus,tolower) 
+ccorpus<-tm_map(ccorpus,removePunctuation)
+ccorpus<-tm_map(ccorpus,removeNumbers)
+ccleaned<-tm_map(ccorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
+ccleaned<-tm_map(ccorpus,removeWords,c('\\n'))
+inspect(ccleaned[1:5])
+ccleaned<-tm_map(ccleaned,stripWhitespace)
+ctdm<-TermDocumentMatrix(ccleaned)
+cmatrix<-as.matrix(ctdm)
+
+cmatrix[1:10,1:20]
+
+attributes(ccleaned)
+df <- data.frame(text = get("content", ccleaned),stringsAsFactors = F)
+head(df$text)
+str(df)
+sentiment <- get_nrc_sentiment(df$text)
+df$s<-sentiment
+head(sentiment)
+head(df$s)
 #### TERM DOCUMENT MATRIX ####
 #to structure the data
 etdm<-TermDocumentMatrix(ecleaned)
@@ -82,21 +100,22 @@ ematrix<-as.matrix(etdm)
 ematrix[1:10,1:20]
 ematrix<-NULL
 #### BARPLOT #### 
-w <- rowSums(ematrix)
-w[1:10]
+w <- rowSums(cmatrix)
+sw[1:10]
 sw<-sort(w,TRUE)
 ov2k <- w[w>1000]
 barplot(sw[1:100],las=2,main="Over 2000")
 sw[1:100]
 w["new"]
 
+barplot(table(articles$sentiment[is.element(articles$source$publisher,names(tpub[1:10]))],articles$source$publisher[is.element(articles$source$publisher,names(tpub[1:10]))]))
 
 #### WORDCLOUD #### 
-set.seed(500)
+set.seed(222)
 wordcloud(words=names(sw),
           freq=sw,
           max.words = 100,
-          min.freq = 1000,
+          min.freq = 2000,
           colors = brewer.pal(8,"Dark2"))
 
 #### SENTIMENT ANALYSIS #### 
@@ -148,8 +167,9 @@ barplot(tpub[1:10],las=1,
                main="Top 10 Publishing Sources",
                  ylab="Amount of Articles",
                  xlab="Sources",
-                 names.arg = c("yahoo","cbsnews","boardingarea","nbc","foxnews","flyertalk","aviationpros","4-traders.com","sfgate","thevillagesuntimes"),
+                 names.arg = names(tpub[1:10]),
                  col="red")
+names(tpub[1:10])
 
 #### TOPIC CLUSTERING ####
 
