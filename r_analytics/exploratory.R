@@ -120,6 +120,20 @@ for(i in 1:10){
 }
 barplot(contingencytb) # PROPORTION OF THE SENTIMENTS
 contingencytb
+
+
+all_art<- table(articles$source$publisher,articles$sentiment)
+
+for(i in 1:3763){
+  if(sum(all_art[i,])<10){
+    t[]
+  }
+  t[i,]<-all_art[i,]/sum(all_art[i,])
+}
+all_art<-sort(all_art,T)
+t<-sort(all_art[,"-1"],T)
+head(t)
+all_art[-1,]
 #### WORDCLOUD #### 
 set.seed(222)
 wordcloud(words=names(sw),
@@ -138,9 +152,33 @@ df$s<-sentiment
 head(sentiment)
 head(df$s)
 
-typeof(sentiment)
+names(sentiment)
 barplot(table(sentiment))
-table(sentiment)
+barplot(table(as.vector(sentiment)))
+tableofsentiment<-c(sum(sentiment$anger),
+                    sum(sentiment$anticipation),
+                    sum(sentiment$disgust),
+                    sum(sentiment$fear),
+                    sum(sentiment$joy),
+                    sum(sentiment$sadness),
+                    sum(sentiment$surprise),
+                    sum(sentiment$trust),
+                    sum(sentiment$negative),
+                    sum(sentiment$positive))
+
+barplot(tableofsentiment,
+        names.arg = names(sentiment))
+
+
+negsen<-c(sum(sentiment$anger),
+                    sum(sentiment$disgust),
+                    sum(sentiment$fear),
+                    sum(sentiment$sadness),
+                    sum(sentiment$surprise),
+                    sum(sentiment$negative))
+
+barplot(negsen,
+        names.arg = c("Anger","Disgust","Fear","Sadness","Surprise","Negative"))
 
 #### EXPORTING CSV ####
 #OK HAVE TO DROP AUTHORS BECAUSE IT IS A LIST OF CHR AND NOT A VECTOR SO CANNOT USE WRITE WITH IT--
@@ -184,15 +222,16 @@ names(tpub[1:10])
 #### TOPIC CLUSTERING ####
 
 # set a seed so that the output of the model is predictable
-k =4
-etdm_lda <- LDA(etdm, k = k, control = list(seed = 1234))
-etdm_lda
+k =6
+ctdm_lda <- LDA(ctdm, k = k, control = list(seed = 1234))
+ctdm_lda
 
-ldamat<-as.matrix(topics(etdm_lda))
+
+ldamat<-as.matrix(topics(ctdm_lda))
 which(ldamat[,1]==2)[1:20]
 ldamat[30]
 
-etdm_topics <- tidy(ldamat,matrix="beta")
+etdm_topics <- tidy(ctdm_lda,matrix="beta")
 etdm_topics[100:150,]
 
 
