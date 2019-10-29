@@ -13,6 +13,8 @@ install.packages("syuzhet")
 install.packages("topicmodels")
 install.packages("tidytext")
 install.packages("rpart.plot")
+install.packages("msm")
+install.packages("sandwich")
 
 ######### LOADING LIBRARY ######### 
 #library("rjson") -- not working
@@ -30,6 +32,8 @@ library("tidytext")
 library("ggplot2")
 library("dplyr")
 library("rpart.plot")
+library("msm")
+library("sandwich")
 
 ######### BEGIN EXPLORE ######### 
 articles <- fromJSON("../datasets/articles.json")
@@ -46,12 +50,12 @@ us_only <- articles[articles$country=="United States",]
 ######### NLP ######### 
 #### BUILDING CORPUS ####
 contentCorpus<- iconv(articles$contents,to="utf-8-mac")
-k1ecorpus<-Corpus(VectorSource(contentCorpus))
+ccorpus<-Corpus(VectorSource(contentCorpus))
 
 excerptCorpus<- iconv(articles$excerpt,to="utf-8-mac")
 ecorpus<-Corpus(VectorSource(excerptCorpus))
 
-inspect(k1ecorpus[1:5])
+inspect(ccorpus[1:5])
 
 #### CLEANING ####
 removeURL<- function(x) gsub('http[[:alnum:]]*','',x)
@@ -72,20 +76,20 @@ ecleaned<-tm_map(ecleaned,stripWhitespace)
 
 #### k1 ####
 k1 <- read.csv("../four-fold-export/k1.csv")
-contentCorpus<- iconv(k1$excerpt,to="utf-8-mac")
-k1ecorpus<-Corpus(VectorSource(contentCorpus))
+contentCorpus<- iconv(k1$contents,to="utf-8-mac")
+ccorpus<-Corpus(VectorSource(contentCorpus))
 
-k1ecorpus<-tm_map(k1ecorpus,tolower) 
-k1ecorpus<-tm_map(k1ecorpus,removePunctuation)
-k1ecorpus<-tm_map(k1ecorpus,removeNumbers)
-ccleaned<-tm_map(k1ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
-#ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
+ccorpus<-tm_map(ccorpus,tolower) 
+ccorpus<-tm_map(ccorpus,removePunctuation)
+ccorpus<-tm_map(ccorpus,removeNumbers)
+ccleaned<-tm_map(ccorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
+#ccleaned<-tm_map(ccorpus,removeWords,c('\\n'))
 inspect(ccleaned[1:5])
 ccleaned<-tm_map(ccleaned,stripWhitespace)
 ctdm<-TermDocumentMatrix(ccleaned)
-#cmatrix<-as.matrix(ctdm)
+cmatrix<-as.matrix(ctdm)
 
-#cmatrix[1:10,1:20]
+cmatrix[1:10,1:20]
 
 attributes(ccleaned)
 df <- data.frame(text = get("content", ccleaned),stringsAsFactors = F)
@@ -95,27 +99,6 @@ sentiment <- get_nrc_sentiment(df$text)
 df$s<-sentiment
 head(sentiment)
 head(df$s)
-#### k2 ####
-k2 <- read.csv("../four-fold-export/k2.csv")
-contentCorpus<- iconv(k2$excerpt,to="utf-8-mac")
-k2ecorpus<-Corpus(VectorSource(contentCorpus))
-
-k2ecorpus<-tm_map(k2ecorpus,tolower) 
-k2ecorpus<-tm_map(k2ecorpus,removePunctuation)
-k2ecorpus<-tm_map(k2ecorpus,removeNumbers)
-k2ccleaned<-tm_map(k2ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
-#ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
-inspect(ccleaned[1:5])
-k2ccleaned<-tm_map(k2ccleaned,stripWhitespace)
-k2ctdm<-TermDocumentMatrix(k2ccleaned)
-#cmatrix<-as.matrix(ctdm)
-
-#cmatrix[1:10,1:20]
-
-attributes(k2ccleaned)
-df2 <- data.frame(text = get("content", k2ccleaned),stringsAsFactors = F)
-sentiment2 <- get_nrc_sentiment(df2$text)
-
 #### TERM DOCUMENT MATRIX ####
 #to structure the data
 etdm<-TermDocumentMatrix(ecleaned)
@@ -383,13 +366,13 @@ for(i in 1:4){
   sentiment <- get_nrc_sentiment(df$text)
   
   features<-data.frame(anger=sentiment$anger,
-                      disgust=sentiment$disgust,
-                      fear=sentiment$fear,
-                      #sentiment=k1$sentiment,
-                      #sadness=sentiment$sadness,
-                      #shares=k1$fb_data.shares>1000,
-                      #twitter = k1$tw_data.tw_count>1000,
-                      max_velocity=train$max_velocity>0.5)
+                       disgust=sentiment$disgust,
+                       fear=sentiment$fear,
+                       #sentiment=k1$sentiment,
+                       #sadness=sentiment$sadness,
+                       #shares=k1$fb_data.shares>1000,
+                       #twitter = k1$tw_data.tw_count>1000,
+                       max_velocity=train$max_velocity>0.5)
   feature<-c(feature,features)
   fit <- rpart(
     max_velocity ~ .,
@@ -513,4 +496,105 @@ pred <- predict(fit,testfeature,type="class")
 er<-nrow(testfeature)-sum(pred==testfeature$max_velocity)
 er/nrow(testfeature)
 sum(pred==testfeature$max_velocity)/nrow(testfeature)
+
+#### CULLED ARTICLES ####
+articles_final<-read.csv("../datasets/articles_final.csv",stringsAsFactors = F)
+
+excerptCorpus<- iconv(articles_final$excerpt,to="utf-8-mac")
+ecorpus<-Corpus(VectorSource(excerptCorpus))
+
+ecorpus<-tm_map(ecorpus,tolower) 
+ecorpus<-tm_map(ecorpus,removePunctuation)
+ecorpus<-tm_map(ecorpus,removeNumbers)
+ecleaned<-tm_map(ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
+#ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
+inspect(ecleaned[1:5])
+ecleaned<-tm_map(ecleaned,stripWhitespace)
+
+df <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
+#head(df$text)
+#str(df)
+sentiment <- get_nrc_sentiment(df$text)
+
+features<-data.frame(anger=sentiment$anger,
+                     disgust=sentiment$disgust,
+                     fear=sentiment$fear,
+                     max_velocity=articles_final$max_velocity)
+
+lm<-glm(max_velocity ~ ., family = poisson, data = features)
+summary(lm)
+plot(max_velocity~.,data=features)
+abline(lm)
+
+f<-sample(seq(1,4477,1),replace = F,size = 2238)
+train<-articles_final[f,]
+test<-articles_final[-f,]
+
+
+
+
+excerptCorpus<- iconv(test$excerpt,to="utf-8-mac")
+ecorpus<-Corpus(VectorSource(excerptCorpus))
+
+ecorpus<-tm_map(ecorpus,tolower) 
+ecorpus<-tm_map(ecorpus,removePunctuation)
+ecorpus<-tm_map(ecorpus,removeNumbers)
+ecleaned<-tm_map(ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
+#ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
+inspect(ecleaned[1:5])
+ecleaned<-tm_map(ecleaned,stripWhitespace)
+
+df2 <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
+#head(df$text)
+#str(df)
+sentiment2 <- get_nrc_sentiment(df2$text)
+
+featurestrain<-data.frame(anger=sentiment1$anger,
+                          disgust=sentiment1$disgust,
+                          fear=sentiment1$fear,
+                          max_velocity=train$max_velocity)
+
+featurestest<-data.frame(anger=sentiment2$anger,
+                          disgust=sentiment2$disgust,
+                          fear=sentiment2$fear,
+                          max_velocity=test$max_velocity)
+
+lm2<-glm(max_velocity~.,family="poisson",data = featurestrain)
+featurestest$ybar<-predict(lm2,featurestest)
+sqrt(sum((featurestest$ybar-featurestest$max_velocity)**2)/nrow(featurestest))
+
+lm3<-glm(anger~max_velocity,family="poisson",data=featurestrain)
+plot(anger~max_velocity,data=featurestrain)
+summary(lm3)
+featurestest$ybar<-predict(lm3,featurestest)
+featurestest$ybar[1:8]
+featurestest$anger[1:8]
+sqrt(sum((featurestest$ybar-featurestest$max_velocity)**2)/nrow(featurestest))
+
+lm4<-glm( disgust ~ max_velocity,family="poisson",data=featurestrain)
+summary(lm4)
+featurestest$ybar<-predict(lm4,featurestest)
+featurestest$ybar[1:8]
+featurestest$disgust[1:8]
+
+lm5<-glm(fear~max_velocity,family="poisson",data=featurestrain)
+summary(lm5)
+featurestrain$sadness<-sentiment1$sadness
+lm6<-glm(sadness~max_velocity,family="poisson",data=featurestrain)
+summary(lm6)
+featurestrain$fear<-sentiment1$fear
+
+summary(lm3)
+summary(lm4)
+summary(lm5)
+summary(lm6)
+
+plot(lm3$residuals~predict(lm3))
+
+
+
+
+
+
+
 
