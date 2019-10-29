@@ -15,6 +15,9 @@ install.packages("tidytext")
 install.packages("rpart.plot")
 install.packages("msm")
 install.packages("sandwich")
+install.packages("jtools")#you may be asked to install 'broom' and 'ggstance' packages as well
+install.packages("broom")
+install.packages("ggstance")
 
 ######### LOADING LIBRARY ######### 
 #library("rjson") -- not working
@@ -34,6 +37,7 @@ library("dplyr")
 library("rpart.plot")
 library("msm")
 library("sandwich")
+library("jtools")
 
 ######### BEGIN EXPLORE ######### 
 articles <- fromJSON("../datasets/articles.json")
@@ -68,37 +72,13 @@ stopwords("english")
 ecleaned<-tm_map(ecorpus,removeWords,stopwords("english"))
 ecleaned<-tm_map(ecorpus,content_transformer(changeWords))
 inspect(ecleaned[1:5])
-#remove united and airlines
+#remove commonly used words in the articles that have no meaningful contribution
 ecleaned<-tm_map(ecleaned,removeWords,c(stopwords("english"),'plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
 inspect(ecleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
 
 
-#### k1 ####
-k1 <- read.csv("../four-fold-export/k1.csv")
-contentCorpus<- iconv(k1$contents,to="utf-8-mac")
-ccorpus<-Corpus(VectorSource(contentCorpus))
 
-ccorpus<-tm_map(ccorpus,tolower) 
-ccorpus<-tm_map(ccorpus,removePunctuation)
-ccorpus<-tm_map(ccorpus,removeNumbers)
-ccleaned<-tm_map(ccorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
-#ccleaned<-tm_map(ccorpus,removeWords,c('\\n'))
-inspect(ccleaned[1:5])
-ccleaned<-tm_map(ccleaned,stripWhitespace)
-ctdm<-TermDocumentMatrix(ccleaned)
-cmatrix<-as.matrix(ctdm)
-
-cmatrix[1:10,1:20]
-
-attributes(ccleaned)
-df <- data.frame(text = get("content", ccleaned),stringsAsFactors = F)
-head(df$text)
-str(df)
-sentiment <- get_nrc_sentiment(df$text)
-df$s<-sentiment
-head(sentiment)
-head(df$s)
 #### TERM DOCUMENT MATRIX ####
 #to structure the data
 etdm<-TermDocumentMatrix(ecleaned)
@@ -351,18 +331,11 @@ for(i in 1:4){
   ecorpus<-tm_map(ecorpus,removePunctuation)
   ecorpus<-tm_map(ecorpus,removeNumbers)
   ecleaned<-tm_map(ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
-  #ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
-  #inspect(ccleaned[1:5])
+
   ecleaned<-tm_map(ecleaned,stripWhitespace)
-  #etdm<-TermDocumentMatrix(ecleaned)
-  #cmatrix<-as.matrix(ctdm)
-  
-  #cmatrix[1:10,1:20]
-  
-  #attributes(ccleaned)
+
   df <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
-  #head(df$text)
-  #str(df)
+
   sentiment <- get_nrc_sentiment(df$text)
   
   features<-data.frame(anger=sentiment$anger,
@@ -391,18 +364,11 @@ for(i in 1:4){
   ecorpus<-tm_map(ecorpus,removePunctuation)
   ecorpus<-tm_map(ecorpus,removeNumbers)
   ecleaned<-tm_map(ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
-  #ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
-  #inspect(ccleaned[1:5])
+  
   ecleaned<-tm_map(ecleaned,stripWhitespace)
-  #etdm<-TermDocumentMatrix(ecleaned)
-  #cmatrix<-as.matrix(ctdm)
   
-  #cmatrix[1:10,1:20]
-  
-  #attributes(ccleaned)
   df2 <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
-  #head(df$text)
-  #str(df)
+
   sentiment2 <- get_nrc_sentiment(df2$text)
   
   testfeature<-data.frame(anger=sentiment2$anger,
@@ -420,7 +386,7 @@ for(i in 1:4){
 
 
 
-#### BEST FIT ####
+#### BEST FIT DECISION TREE MODEL####
 besttrain<-rbind(k2,k3,k4)
 besttest<-k1
 
@@ -431,18 +397,10 @@ ecorpus<-tm_map(ecorpus,tolower)
 ecorpus<-tm_map(ecorpus,removePunctuation)
 ecorpus<-tm_map(ecorpus,removeNumbers)
 ecleaned<-tm_map(ecorpus,removeWords,c(stopwords("en"),'\\n','plane',"united","airlines","flight","airline","passenger","flights","will","according","…","—","’s","says","said"))
-#ccleaned<-tm_map(k1ecorpus,removeWords,c('\\n'))
-#inspect(ccleaned[1:5])
 ecleaned<-tm_map(ecleaned,stripWhitespace)
-#etdm<-TermDocumentMatrix(ecleaned)
-#cmatrix<-as.matrix(ctdm)
 
-#cmatrix[1:10,1:20]
-
-#attributes(ccleaned)
 df <- data.frame(text = get("content", ecleaned),stringsAsFactors = F)
-#head(df$text)
-#str(df)
+
 sentiment <- get_nrc_sentiment(df$text)
 
 features<-data.frame(anger=sentiment$anger,
@@ -497,7 +455,7 @@ er<-nrow(testfeature)-sum(pred==testfeature$max_velocity)
 er/nrow(testfeature)
 sum(pred==testfeature$max_velocity)/nrow(testfeature)
 
-#### CULLED ARTICLES ####
+#### CULLED ARTICLES ANALYSIS####
 articles_final<-read.csv("../datasets/articles_final.csv",stringsAsFactors = F)
 
 excerptCorpus<- iconv(articles_final$excerpt,to="utf-8-mac")
@@ -559,6 +517,8 @@ featurestest<-data.frame(anger=sentiment2$anger,
                           fear=sentiment2$fear,
                           max_velocity=test$max_velocity)
 
+#BUILDING GENERAL LINEAR REGRESSION MODELS BASED ON POISSON
+
 lm2<-glm(max_velocity~.,family="poisson",data = featurestrain)
 featurestest$ybar<-predict(lm2,featurestest)
 sqrt(sum((featurestest$ybar-featurestest$max_velocity)**2)/nrow(featurestest))
@@ -566,7 +526,7 @@ sqrt(sum((featurestest$ybar-featurestest$max_velocity)**2)/nrow(featurestest))
 lm3<-glm(anger~max_velocity,family="poisson",data=featurestrain)
 plot(anger~max_velocity,data=featurestrain)
 summary(lm3)
-featurestest$ybar<-predict(lm3,featurestest)
+featurestest$ybar<-predict(lm3,featurestest,type = "response")
 featurestest$ybar[1:8]
 featurestest$anger[1:8]
 sqrt(sum((featurestest$ybar-featurestest$max_velocity)**2)/nrow(featurestest))
@@ -591,10 +551,10 @@ summary(lm6)
 
 plot(lm3$residuals~predict(lm3))
 
+lm7<-glm(max_velocity~fear+sadness+disgust+anger,family= poisson(link = "log"),data=featurestrain)
+summary(lm7)
 
+plot_summs(lm7, scale = TRUE, exp = TRUE)
 
-
-
-
-
+get_nrc_sentiment()
 
