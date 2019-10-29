@@ -13,6 +13,9 @@ This repository is the submission of our team to the EPIC-Data-Challenge 2019.  
 ## Metadata:
 1. articles_final.csv:
 Culled dataset that removes zeroes and columns deemed less important for the classifier, visualizations and Poisson regression model.
+2. k1-k4.csv:
+Under the four-fold cross-validation, used to chunk the dataset into four distinct parts for Decision Tree model. 
+
 
 ## Other resources: 
 
