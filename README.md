@@ -1,6 +1,6 @@
 # EPIC Data Challenge
 ## Authors:
-Hana Nabilah Fatinah, Mirav Raghavan, Pan Jia Qi, and Sewen Thy
+Hana Nabilah Fatinah, Sowmya Raghavan, Pan Jia Qi, and Sewen Thy
 
 ## University:
 Yale-NUS College, Singapore 
